@@ -525,6 +525,12 @@
                 <div class="results-grid" id="results-grid"></div>
             </div>
             
+            <!-- Debug info -->
+            <div id="debug-info" style="margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.7); display: none;">
+                <div style="font-weight: 600; margin-bottom: 10px; color: #667eea;">🔍 Отладочная информация:</div>
+                <div id="debug-content"></div>
+            </div>
+            
             <div id="loading" class="loading" style="display: none;">Поиск...</div>
         </div>
     </div>
@@ -649,11 +655,45 @@
             try {
                 console.log('[Discord Search] Searching in', adminProfilesCache.length, 'profiles for:', cleanDiscord);
                 
+                // Показываем отладочную информацию на странице
+                const debugInfo = document.getElementById('debug-info');
+                const debugContent = document.getElementById('debug-content');
+                debugInfo.style.display = 'block';
+                
+                let debugHTML = `<div>📊 Всего профилей в кэше: <strong>${adminProfilesCache.length}</strong></div>`;
+                debugHTML += `<div>🔎 Ищем: <strong>${cleanDiscord}</strong></div>`;
+                
                 // Выводим пример профиля для отладки
                 if (adminProfilesCache.length > 0) {
-                    console.log('[Discord Search] Sample profile fields:', Object.keys(adminProfilesCache[0]));
-                    console.log('[Discord Search] Sample profile:', adminProfilesCache[0]);
+                    const sampleProfile = adminProfilesCache[0];
+                    console.log('[Discord Search] Sample profile fields:', Object.keys(sampleProfile));
+                    console.log('[Discord Search] Sample profile:', sampleProfile);
+                    
+                    debugHTML += `<div style="margin-top: 10px;">📋 Поля в профиле:</div>`;
+                    debugHTML += `<div style="margin-left: 10px; font-family: monospace; font-size: 11px;">${Object.keys(sampleProfile).join(', ')}</div>`;
+                    
+                    // Показываем Discord поля из первого профиля
+                    const discordFields = {
+                        'discord': sampleProfile.discord,
+                        'discord_username': sampleProfile.discord_username,
+                        'discordUsername': sampleProfile.discordUsername,
+                        'discord_name': sampleProfile.discord_name,
+                        'discordName': sampleProfile.discordName,
+                        'discord_tag': sampleProfile.discord_tag,
+                        'discordTag': sampleProfile.discordTag
+                    };
+                    
+                    debugHTML += `<div style="margin-top: 10px;">💬 Discord поля в первом профиле:</div>`;
+                    for (const [key, value] of Object.entries(discordFields)) {
+                        if (value) {
+                            debugHTML += `<div style="margin-left: 10px; color: #22c55e;">✓ ${key}: <strong>${value}</strong></div>`;
+                        } else {
+                            debugHTML += `<div style="margin-left: 10px; color: rgba(255,255,255,0.3);">✗ ${key}: null</div>`;
+                        }
+                    }
                 }
+                
+                debugContent.innerHTML = debugHTML;
                 
                 // Ищем в кэше (проверяем разные поля)
                 const matchedProfiles = adminProfilesCache.filter(profile => {
@@ -680,6 +720,7 @@
                 });
                 
                 console.log('[Discord Search] Found matches:', matchedProfiles.length);
+                debugContent.innerHTML += `<div style="margin-top: 10px;">✅ Найдено совпадений: <strong>${matchedProfiles.length}</strong></div>`;
                 
                 if (matchedProfiles.length === 0) {
                     showError(`Админы с Discord "${cleanDiscord}" не найдены. Всего профилей в кэше: ${adminProfilesCache.length}`);
