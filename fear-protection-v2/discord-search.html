@@ -649,10 +649,34 @@
             try {
                 console.log('[Discord Search] Searching in', adminProfilesCache.length, 'profiles for:', cleanDiscord);
                 
+                // Выводим пример профиля для отладки
+                if (adminProfilesCache.length > 0) {
+                    console.log('[Discord Search] Sample profile fields:', Object.keys(adminProfilesCache[0]));
+                    console.log('[Discord Search] Sample profile:', adminProfilesCache[0]);
+                }
+                
                 // Ищем в кэше (проверяем разные поля)
                 const matchedProfiles = adminProfilesCache.filter(profile => {
-                    const discord = profile.discord || profile.discord_username || profile.discordUsername || '';
-                    return discord && discord.toLowerCase().includes(cleanDiscord.toLowerCase());
+                    // Проверяем все возможные поля с Discord
+                    const discordFields = [
+                        profile.discord,
+                        profile.discord_username,
+                        profile.discordUsername,
+                        profile.discord_name,
+                        profile.discordName,
+                        profile.discord_tag,
+                        profile.discordTag,
+                        profile.discord_id,
+                        profile.discordId
+                    ];
+                    
+                    // Ищем совпадение хотя бы в одном поле
+                    return discordFields.some(field => {
+                        if (!field) return false;
+                        const fieldStr = String(field).toLowerCase();
+                        const searchStr = cleanDiscord.toLowerCase();
+                        return fieldStr.includes(searchStr);
+                    });
                 });
                 
                 console.log('[Discord Search] Found matches:', matchedProfiles.length);
@@ -692,7 +716,16 @@
                 card.className = 'player-card';
                 card.onclick = () => window.location.href = `profile.html?steamid=${player.steamid || player.steam_id}`;
                 
-                const discord = player.discord || player.discord_username || player.discordUsername || 'Не указан';
+                // Ищем Discord в разных полях
+                const discord = player.discord || 
+                               player.discord_username || 
+                               player.discordUsername || 
+                               player.discord_name ||
+                               player.discordName ||
+                               player.discord_tag ||
+                               player.discordTag ||
+                               'Не указан';
+                               
                 const steamId = player.steamid || player.steam_id || 'N/A';
                 const name = player.name || player.nickname || 'Неизвестно';
                 const avatar = player.avatar || 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg';
